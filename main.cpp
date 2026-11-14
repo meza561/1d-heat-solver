@@ -235,14 +235,6 @@ int main() {
 
     }
 
-    //max error calculation
-    double maxError = 0.0;
-    for (int i = 0; i < gridpoints; i++) {
-        double exact = exp(-4.0 * M_PI * M_PI * k * time / (length * length)) * sin(2.0 * M_PI * (x[i] - xmin) / length);
-        maxError = max(maxError, fabs(u[i] - exact));
-    }
-    cout << "Max error VS. Exact: " << maxError << endl;
-
     cout << "heat at t = " << time << ": " << totalHeat(u, dx, periodic) << endl;
 
     cout << u[gridpoints - 1] << endl;
