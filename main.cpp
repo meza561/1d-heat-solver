@@ -47,11 +47,11 @@ void readBC(const string& sideName, double position, bool allowPeriodic, BCType&
     switch (choice) {
         case 1:
             type = BCType::Dirichlet;
-            value = readDouble("   Temperature at the " + sideName + " end", 0.0, 1e-6, 1e6);
+            value = readDouble("   Temperature at the " + sideName + " end", 0.0, -1e6, 1e6);
             break;
         case 2:
             type = BCType::Neumann;
-            value = readDouble("   Derivative at the " + sideName + "end", 0.0, 1e-6, 1e6);
+            value = readDouble("   Derivative at the " + sideName + "end", 0.0, -1e6, 1e6);
             break;
         case 3:
             type = BCType::Periodic;
