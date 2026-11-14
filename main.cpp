@@ -237,8 +237,6 @@ int main() {
 
     cout << "heat at t = " << time << ": " << totalHeat(u, dx, periodic) << endl;
 
-    cout << u[gridpoints - 1] << endl;
-
     //print the grid in x[i] = c1 u[i] = c2 form
     // for (int i = 0; i < gridpoints; ++i) {
     //     cout << "x[" << i << "] = " << x[i];
