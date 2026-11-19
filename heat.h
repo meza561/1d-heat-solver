@@ -1,6 +1,6 @@
 #ifndef HEAT_H
 #define HEAT_H
-
+//could do 2-3 different header files but i dont care enough to do that so just one "heat" one
 #include <fstream>
 #include <string>
 #include <vector>
