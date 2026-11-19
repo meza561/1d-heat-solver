@@ -1,95 +1,69 @@
 #include <iostream>
-#include <vector>
 #include <cmath>
-#include <string>
-#include <fstream>
-#include "output.h"
-#include "input.h"
+#include "heat.h"
 
 using namespace std;
 
 //initial condition profile f0(x)
+//the root of it all
 double initialCondition(double x, double xmin, double length) {
     double s = (x - xmin) / length;
     //scaling position to (0,1)
     return exp(-200 * (s - 0.5) * (s - 0.5));
 }
 
-// Trapezoid-rule total heat: integral of u over [0, L]
+// trapezoid rule total heat: integral of u over [xmin, xmax]
+// exempts periodic bcs due to ring behavior
 double totalHeat(const vector<double>& u, double dx, bool periodic) {
     int n = u.size();
     double sum = 0.0;
+    //sum of "heat" of each entry in each cell
     for (int i= 0; i < n; i++) sum += u[i];
+    //subtracts average of start and end points when not wrapping around
     if (!periodic) sum -= 0.5 * (u[0] + u[n - 1]);
-
-    // 0.5 * u[0] + 0.5 * u[n - 1];
-    // for (int i = 1; i < n - 1; ++i) sum += u[i];
+    //sum times space in x dimension will give us total heat
     return sum * dx;
 }
 
-//BC types
-enum class BCType{Dirichlet, Neumann, Periodic};
-
-// asks for one end of the BC
-// value and type are based by reference so the function can fill them in
-void readBC(const string& sideName, double position, bool allowPeriodic, BCType& type, double& value) {
-    cout << "\nBoundary Condition at the " << sideName << " end (x = " << position << "):" << endl;
-
-    cout << "   1) Dirichlet   - Fixed temperature" << endl;
-    cout << "   2) Neumann     - Fixed derivative" << endl;
-    if (allowPeriodic) {
-        cout << "   3) Periodic    - Ends wrap around" << endl;
-    }
-    int maxChoice = allowPeriodic ? 3 : 2;
-    int defaultChoice = allowPeriodic ? 3 : 1;
-    int choice = readInt("Choice", defaultChoice, 1 , maxChoice);
-
-    switch (choice) {
-        case 1:
-            type = BCType::Dirichlet;
-            value = readDouble("   Temperature at the " + sideName + " end", 0.0, -1e6, 1e6);
-            break;
-        case 2:
-            type = BCType::Neumann;
-            value = readDouble("   Derivative at the " + sideName + "end", 0.0, -1e6, 1e6);
-            break;
-        case 3:
-            type = BCType::Periodic;
-            value = 0.0;
-            break;
-    }
-}
-
 int main() {
-
+    //just for sight in terminal no actual purpose
     cout << "1D heat equation  u_t - k u_xx = 0  (forward Euler)\n";
     cout << "Press Enter to accept the value in [brackets].\n\n";
 
+    //reads what the xmin is based on user entry has a default val of -1
     double xmin = readDouble("Left end of domain, xmin", -1.0, -1e6, 1e6);
 
     // xmax depends on xmin, so it gets its own check
     double xmax;
     do {
+        //same read as xmin for the xmax now and holds default value 0f 1 making default interval [-1,1]
         xmax = readDouble("Right end of domain, xmax", 1.0, -1e6, 1e6);
+        //check to make sure that xmax > xmin
         if (xmax <= xmin) cout << "  xmax must be greater than xmin (" << xmin << ").\n";
     } while (xmax <= xmin);
+
+    //final minus initial idk pretty self explanatory
     double length = xmax - xmin;
 
+    //diffusion coefficient + intervales + total time measured + CFL condition value (r < 0.5) user inputs
     double k = readDouble("Diffusion coefficient, k", 1.0, 1e-9, 1e6);
     int intervals = readInt("Number of intervals, N", 160, 2, 2000);
     double finalTime = readDouble("Final time, T", 0.1, 1e-9, 1e3);
     double targetR = readDouble("Target CFL condition r = k*dt/dx^2 (needs to be <= 0.5)",0.45, 0.01, 1.0);
     cout << "\n";
 
-    //number of snapshots
+    //number of snapshots, i held it constant but i GUESS u could make it user input i just didnt want to
     int nFrames = 200;
     string outFile = "heat.csv";
 
     //BC filled by readbc by reference
     BCType leftType = BCType::Dirichlet, rightType = BCType::Dirichlet;
+
+    //initializing value variables for either derivative values (neumann) or constants (dirichlet) for BC
     double leftValue = 0.0;
     double rightValue = 0.0;
 
+    //just makes sure if one end is period then the other is to otherwise it just calls to read bc based on user input
     readBC("left", xmin, true, leftType, leftValue);
     if (leftType == BCType::Periodic) {
         rightType = BCType::Periodic; // periodic pairs to periodic
@@ -100,12 +74,7 @@ int main() {
     }
     cout << endl;
 
-    // //u(0, t) / u_x(0,t)
-    // BCType leftType = BCType::Periodic;
-    // double leftValue = 0.0;
-    // //u(L, t) / u_x(L,t)
-    // BCType rightType = BCType::Periodic;
-    // double rightValue = 0.0;
+  
 
     // makes sure periodic BC is set for both sides
     bool periodic = (leftType == BCType::Periodic);
@@ -157,7 +126,7 @@ int main() {
 
     // time steps
 
-    //5 step snapshot
+    //5 step snapshot of progress
     double time = 0.0;
 
     int printEvery = nSteps / 5;
@@ -237,11 +206,7 @@ int main() {
 
     cout << "heat at t = " << time << ": " << totalHeat(u, dx, periodic) << endl;
 
-    //print the grid in x[i] = c1 u[i] = c2 form
-    // for (int i = 0; i < gridpoints; ++i) {
-    //     cout << "x[" << i << "] = " << x[i];
-    //     cout << "   u[" << i << "] = " << u[i] << endl;
-    // }
     writePPM("heat.ppm", frames, 600, 400);
     return 0;
 }
+//thank you for grading :)

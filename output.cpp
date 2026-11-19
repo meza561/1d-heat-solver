@@ -1,10 +1,8 @@
-// output.cpp
-// Everything that writes simulation results to disk:
 //   - writeRow:  appends one time snapshot to a CSV file
 //   - colormap:  turns a normalized value into a color
 //   - writePPM:  renders all snapshots as a space-time heat map image
 
-#include "output.h"   // declarations for writeRow / writePPM (and fstream, vector, string)
+#include "heat.h"   // declarations for writeRow / writePPM (and fstream, vector, string)
 #include <iostream>   // cout, for the status message printed after the image is written
 
 using namespace std;
