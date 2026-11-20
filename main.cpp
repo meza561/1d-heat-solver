@@ -70,13 +70,16 @@ int main() {
         rightValue = 0.0;
         cout << "  Right end is periodic as well" << endl;
     } else {
+        //gives options for otherside if not periodic not allowing period on this side if not on other side
         readBC("right", xmax, false, rightType, rightValue);
     }
+    //just a space
     cout << endl;
 
   
 
     // makes sure periodic BC is set for both sides
+    // returns 1 (standard for bug)
     bool periodic = (leftType == BCType::Periodic);
     if ((leftType == BCType::Periodic) != (rightType == BCType::Periodic)) {
         cerr << "Error: Periodic BC must be set for both ends" << endl;
@@ -84,32 +87,43 @@ int main() {
     }
 
     //spacing on the grid
+    //reflected in total heat
     double dx = length / intervals;
 
     //intervals + 1 is gridpoints so that it measures as x0, x1, x2, etc.
+    //takes one writes to another and copies it
     int gridpoints = periodic ? intervals : intervals + 1;
     vector<double> x(gridpoints);
     vector<double> u(gridpoints, 0.0);
     vector<double> unew(gridpoints, 0.0);
 
     //filling x
+    //for each value it is dependent on dx, i and the xmin value
     for (int i = 0; i < gridpoints; ++i) {
         x[i] = xmin + i * dx;
     }
 
-    //filling u
+    //filling u bsed on ic
+    // uses each x from before into a u
     for (int i = 0; i < gridpoints; ++i) {
-        u[i] =initialCondition(x[i], xmin, length);
+        u[i] = initialCondition(x[i], xmin, length);
     }
 
-    // Apply Dirichlet BCs at t = 0 (Neumann endpoints keep f(x))
-    if (leftType == BCType::Dirichlet)  u[0] = leftValue;
-    if (rightType == BCType::Dirichlet) u[gridpoints - 1] = rightValue;
+    // apply Dirichlet BCs at t = 0 (Neumann endpoints keep f(x))
+    // differs from derivative
+    if (leftType == BCType::Dirichlet) {
+        u[0] = leftValue;
+    } else if (rightType == BCType::Dirichlet) {
+        u[gridpoints - 1] = rightValue;
+    }
+
 
     // calculation of the CFL condition
+    // (dx)^2/2dk
     double dtMax = dx * dx / (2.0 * k);
     double dt = targetR * dx * dx / k;
 
+    //check to make sure it doesnt explode and make heat go to 10e14 or something crazy
     if (dt > dtMax) {
         cout << "[stability] dt = " << dt << " exceeds dtMax = " << dtMax << ", clamping" << endl;
         dt = 0.99 * dtMax;
@@ -120,8 +134,9 @@ int main() {
     int nSteps = static_cast<int>(ceil(finalTime/ dt));
     dt = finalTime / nSteps;
 
+    //sets r to kdt/(dx)^2
     double r = k * dt / (dx * dx);
-
+    //just display output of each value
     cout << "dx = " << dx << "  dt = " << dt << "   dt max = " << dtMax << "    r = " << r << "    steps = " << nSteps << endl;
 
     // time steps
@@ -136,6 +151,7 @@ int main() {
 
     //open file and write header
     ofstream csv(outFile);
+    //just makes sure file is readable and not some random stuff
     if (!csv) {
         cerr << "Error: Could not open " << outFile << endl;
         return 1;
@@ -153,10 +169,12 @@ int main() {
     vector<vector<double>> frames;
     frames.push_back(u);
 
+    //makes sure atleast a frame is kept
     int saveEvery = nSteps / nFrames;
     if (saveEvery < 1) saveEvery = 1;
 
     // time loop
+    //main body of calculations
     for (int n = 1; n<= nSteps; ++n) {
     // read from u old and write to u new
         for (int i = 1; i < gridpoints -1; i++) {
@@ -165,6 +183,7 @@ int main() {
 
         int last = gridpoints - 1;
 
+        // same formula as u new
         // left boundary (i = 0)
         if (leftType == BCType::Dirichlet) {
             unew[0] = leftValue;
@@ -175,6 +194,7 @@ int main() {
             unew[0] = u[0] + r * (u[1] - 2.0 * u[0] + u[last]);
         }
 
+        // same formula as u new
         // right boundary (i = N)
         if (rightType == BCType::Dirichlet) {
             unew[last] = rightValue;
@@ -185,18 +205,21 @@ int main() {
             unew[last] = u[last] + r * (u[0] - 2.0 * u[last] + u[last - 1]);
         }
 
+        //turns u into the new unew that was calculated for the next step
         u.swap(unew);
         time += dt;
 
         //write frame to csv
+        //writes the newly updated u to it
         if (n % saveEvery == 0 || n == nSteps) {
             writeRow(csv, time, u);
             frames.push_back(u);
         }
 
+        //just small check for making sure points are existing
         if (n % printEvery == 0 || n == nSteps) {
             double umax = u[0];
-            for (int i =1; i < gridpoints; i++) {
+            for (int i = 1; i < gridpoints; i++) {
                 if (u[i] > umax) umax = u[i];
             }
             cout << "step " << n << "   time = " << time << "   max u = " << umax << endl;
