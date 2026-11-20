@@ -38,6 +38,10 @@ int main() {
     do {
         //same read as xmin for the xmax now and holds default value 0f 1 making default interval [-1,1]
         xmax = readDouble("Right end of domain, xmax", 1.0, -1e6, 1e6);
+        if (xmax <= xmin && !cin) {
+            cerr <<"\nError: input ended before a valid xmax was entered.\n";
+            return 1;
+        }
         //check to make sure that xmax > xmin
         if (xmax <= xmin) cout << "  xmax must be greater than xmin (" << xmin << ").\n";
     } while (xmax <= xmin);
@@ -235,7 +239,8 @@ int main() {
 
     cout << "heat at t = " << time << ": " << totalHeat(u, dx, periodic) << endl;
 
-    writePPM("heat.ppm", frames, 600, 400);
+    if (!writePPM("heat.ppm", frames, 600, 400))
+        return 1;
     return 0;
 }
 //thank you for grading

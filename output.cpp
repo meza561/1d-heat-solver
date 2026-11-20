@@ -57,7 +57,7 @@ static RGB colormap(double s) {
 // width x height pixels; each pixel samples the nearest snapshot (row) and
 // grid point (column), so the picture can be larger or smaller than the data.
 // Output is a binary PPM (P6), a minimal image format most viewers can open.
-void writePPM(const string& path, const vector<vector<double>>& frames,
+bool writePPM(const string& path, const vector<vector<double>>& frames,
               int width, int height) {
     // color range over the whole run
     // Find the global min and max of u across every snapshot, so the same
@@ -77,6 +77,10 @@ void writePPM(const string& path, const vector<vector<double>>& frames,
     // Open in binary mode so pixel bytes are written exactly, with no newline translation.
     // PPM header: magic "P6", image size, then max channel value (255 = one byte per channel).
     ofstream img(path, ios::binary);
+    if (!img) {
+        cerr << "\nError: Couldn't open file " << path << endl;
+        return false;
+    }
     img << "P6\n" << width << " " << height << "\n255\n";
 
     // Pixel data follows the header: rows top to bottom, pixels left to right, 3 bytes each.
@@ -96,4 +100,5 @@ void writePPM(const string& path, const vector<vector<double>>& frames,
     // Report where the image went and the value range the colors span
     // (black = umin, pale yellow = umax). The file closes when img goes out of scope.
     cout << "wrote " << path << "  (" << width << " x " << height << ", u from " << umin << " to " << umax << ")" << endl;
+    return true;
 }
