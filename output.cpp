@@ -3,7 +3,7 @@
 //   - writePPM:  renders all snapshots as a space-time heat map image
 
 #include "heat.h"   // declarations for writeRow / writePPM (and fstream, vector, string)
-#include <iostream>   // cout, for the status message printed after the image is written
+#include <iostream>
 
 using namespace std;
 

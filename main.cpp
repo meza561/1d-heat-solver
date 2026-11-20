@@ -70,7 +70,7 @@ int main() {
         rightValue = 0.0;
         cout << "  Right end is periodic as well" << endl;
     } else {
-        //gives options for otherside if not periodic not allowing period on this side if not on other side
+        //gives options for other side if not periodic not allowing period on this side if not on other side
         readBC("right", xmax, false, rightType, rightValue);
     }
     //just a space
@@ -130,9 +130,14 @@ int main() {
         dt = 0.99 * dtMax;
     }
 
-    //calculates how many steps to reach final time, then rounding up and shrinking dt by a bit
-    //lands on T exactly eventually then only makes r smaller thus safer
-    int nSteps = static_cast<int>(ceil(finalTime/ dt));
+    // work out the step count as a double first, so a huge value can't overflow an int
+    double stepsNeeded = ceil(finalTime / dt);
+    const double maxSteps = 1e8;   // about 100 million steps, already a long run
+    if (!isfinite(stepsNeeded) || stepsNeeded > maxSteps) {
+        cerr << "Error: these settings need " << stepsNeeded << " time steps (limit " << maxSteps << "). Lower T or N, or raise k or r." << endl;
+        return 1;
+    }
+    int nSteps = static_cast<int>(stepsNeeded);   // safe now: 1 <= stepsNeeded <= 1e8
     dt = finalTime / nSteps;
 
     //sets r to kdt/(dx)^2
@@ -170,7 +175,7 @@ int main() {
     vector<vector<double>> frames;
     frames.push_back(u);
 
-    //makes sure atleast a frame is kept
+    //makes sure at least a frame is kept
     int saveEvery = nSteps / nFrames;
     if (saveEvery < 1) saveEvery = 1;
 
