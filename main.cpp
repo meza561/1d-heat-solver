@@ -233,4 +233,4 @@ int main() {
     writePPM("heat.ppm", frames, 600, 400);
     return 0;
 }
-//thank you for grading :)
+//thank you for grading
