@@ -113,7 +113,8 @@ int main() {
     // differs from derivative
     if (leftType == BCType::Dirichlet) {
         u[0] = leftValue;
-    } else if (rightType == BCType::Dirichlet) {
+    }
+    if (rightType == BCType::Dirichlet) {
         u[gridpoints - 1] = rightValue;
     }
 
