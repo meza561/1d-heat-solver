@@ -3,9 +3,7 @@
 //colormap turns a value into a color
 //writePPM makes the heat map picture out of all the snapshots
 
-//has the declarations for writeRow and writePPM (plus fstream, vector, string)
 #include "heat.h"
-//for cout and cerr
 #include <iostream>
 
 using namespace std;
@@ -65,8 +63,7 @@ static RGB colormap(double s) {
 //each pixel just grabs the closest snapshot and grid point so the picture can be any size
 //output is a binary ppm which is a super simple image format most viewers can open
 //returns false if the file wont open so main can tell something went wrong
-bool writePPM(const string& path, const vector<vector<double>>& frames,
-              int width, int height) {
+bool writePPM(const string& path, const vector<vector<double>>& frames, int width, int height) {
     //color range over the whole run
     //finds the min and max of u across every snapshot so a color means the same value everywhere
     double umin = frames[0][0], umax = frames[0][0];
